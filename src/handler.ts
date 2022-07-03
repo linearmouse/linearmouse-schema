@@ -1,7 +1,7 @@
 export async function handleRequest(event: FetchEvent): Promise<Response> {
   const { pathname } = new URL(event.request.url);
 
-  const match = /^\/schema\/(?:sha-)?([^/]+)$/.exec(pathname);
+  const match = /^\/schema\/(sha-)?([^/]+)$/.exec(pathname);
 
   if (!match) {
     return new Response('Not found', { status: 404 });
@@ -15,7 +15,7 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
     }
   }
 
-  const [, head] = match;
+  const [, isCommit, head] = match;
 
   const { ok, body } = await fetch(
     `https://raw.githubusercontent.com/linearmouse/linearmouse/${head}/Documentation/Configuration.json`
@@ -25,10 +25,15 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
     return new Response('Not found', { status: 404 });
   }
 
+  const cacheControl =
+    isCommit || /^\d+(?:\.\d+){2}(?:-|$)/.test(head)
+      ? 'public, max-age=86400, s-maxage=31536000'
+      : 'public, max-age=0, s-maxage=600';
+
   const response = new Response(body, {
     headers: {
       'content-type': 'application/json',
-      'cache-control': 'public, max-age=86400, s-maxage=31536000',
+      'cache-control': cacheControl,
     },
   });
 
