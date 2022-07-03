@@ -1,0 +1,7 @@
+name = "linearmouse-schema"
+main = "dist/worker.js"
+workers_dev = true
+compatibility_date = "2022-06-03"
+
+[build]
+command = "npm install && npm run build"
