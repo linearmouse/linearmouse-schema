@@ -15,7 +15,13 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
     }
   }
 
-  const [, isCommit, head] = match;
+  let [, isCommit, head] = match;
+
+  const isVersion = !isCommit && /^\d+(?:\.\d+){2}(?:-|$)/.test(head);
+
+  if (isVersion) {
+    head = `v${head}`;
+  }
 
   const { ok, body } = await fetch(
     `https://raw.githubusercontent.com/linearmouse/linearmouse/${head}/Documentation/Configuration.json`
@@ -26,9 +32,7 @@ export async function handleRequest(event: FetchEvent): Promise<Response> {
   }
 
   const cacheControl =
-    isCommit || /^\d+(?:\.\d+){2}(?:-|$)/.test(head)
-      ? 'public, max-age=86400, s-maxage=31536000'
-      : 'public, max-age=0, s-maxage=600';
+    isCommit || isVersion ? 'public, max-age=86400, s-maxage=31536000' : 'public, max-age=0, s-maxage=600';
 
   const response = new Response(body, {
     headers: {
